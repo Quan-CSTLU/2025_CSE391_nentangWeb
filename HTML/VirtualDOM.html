@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Virtual DOM - Update Last 10 Items</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .item { padding: 5px; border-bottom: 1px dotted #ccc; }
+        /* Thêm hiệu ứng nhấp nháy nhẹ để dễ nhận biết các item được cập nhật */
+        .updated { background-color: #e0ffe0; color: green; animation: fadeEffect 1s forwards; }
+        @keyframes fadeEffect {
+            from { background-color: #e0ffe0; }
+            to { background-color: transparent; }
+        }
+        /* Đảm bảo class updated chỉ tồn tại tạm thời để hiệu ứng nhấp nháy */
+        .updated-persist { background-color: #e0ffe0; color: green; }
+
+        #app { margin-top: 20px; border: 1px solid #ddd; padding: 10px; height: 400px; overflow-y: scroll; }
+        button { padding: 10px 15px; margin-bottom: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>React Virtual DOM Example (Update Last 10 of 10,000 Items)</h1>
+    <p>Watch the Console, Elements tab, and Performance tab when you click the button.</p>
+    <div id="app"></div>
+
+    <script type="text/babel">
+        console.log('React DOM Example: Script started.');
+
+        function App() {
+            const NUM_ITEMS = 10000; // Tổng số lượng mục
+            const NUM_TO_UPDATE = 10; // Số lượng mục cuối cùng cần cập nhật
+
+            const [items, setItems] = React.useState(() => {
+                console.time('React DOM: Initial State Creation');
+                const initialItems = [];
+                for (let i = 0; i < NUM_ITEMS; i++) {
+                    initialItems.push({ id: i, text: `Item ${i + 1}`, isUpdated: false });
+                }
+                console.timeEnd('React DOM: Initial State Creation');
+                console.log(`React DOM: Created initial state for ${NUM_ITEMS} items.`);
+                return initialItems;
+            });
+
+            // Sử dụng useEffect để quan sát render, chỉ chạy lại khi items thay đổi
+            // Dòng này hữu ích để biết khi nào React hoàn thành việc render lại
+            React.useEffect(() => {
+                console.log('React DOM: Component rendered/updated.');
+            }, [items]); // Chạy khi items thay đổi
+
+            const updateLast10Items = () => {
+                console.time('React DOM: State Update and Virtual DOM Diffing');
+                console.log(`React DOM: Starting state update for the last ${NUM_TO_UPDATE} items...`);
+
+                setItems(prevItems => {
+                    // Tạo một bản sao mới của mảng để không thay đổi trực tiếp state cũ
+                    const newItems = [...prevItems]; 
+                    
+                    // Xác định chỉ số bắt đầu của 10 item cuối cùng
+                    const startIndex = NUM_ITEMS - NUM_TO_UPDATE;
+
+                    // Duyệt qua 10 item cuối cùng và cập nhật chúng
+                    for (let i = 0; i < NUM_TO_UPDATE; i++) {
+                        const itemIndex = startIndex + i;
+                        if (newItems[itemIndex]) { // Đảm bảo item tồn tại
+                            newItems[itemIndex] = {
+                                ...newItems[itemIndex], // Giữ lại các thuộc tính cũ
+                                text: `UPDATED Last 10 Item ${newItems[itemIndex].id + 1} (${Date.now() % 10000})`, // Thêm timestamp để thấy sự thay đổi mỗi lần click
+                                isUpdated: true
+                            };
+                        }
+                    }
+                    return newItems;
+                });
+
+                console.log('React DOM: setState called. React will now reconcile and update actual DOM.');
+                console.timeEnd('React DOM: State Update and Virtual DOM Diffing');
+            };
+
+            return (
+                <div>
+                    <button onClick={updateLast10Items}>Update Last {NUM_TO_UPDATE} Items</button>
+                    <div style={{ maxHeight: '400px', overflowY: 'scroll', border: '1px solid #ddd', padding: '10px' }}>
+                        {items.map(item => (
+                            <div 
+                                key={item.id} 
+                                // Sử dụng class 'updated-persist' nếu bạn muốn màu nền giữ nguyên
+                                // Hoặc chỉ 'updated' nếu bạn muốn hiệu ứng nhấp nháy rồi biến mất
+                                className={`item ${item.isUpdated ? 'updated' : ''}`}
+                            >
+                                {item.text}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        const container = document.getElementById('app');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+
+        console.log('React DOM Example: Script finished setup and initial render triggered.');
+    </script>
+</body>
+</html>

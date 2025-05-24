@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pure DOM Manipulation - Update Last 10 Items</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .item { padding: 5px; border-bottom: 1px dotted #ccc; }
+        /* Thêm hiệu ứng nhấp nháy nhẹ để dễ nhận biết các item được cập nhật */
+        .updated { background-color: #e0ffe0; color: green; animation: fadeEffect 1s forwards; }
+        @keyframes fadeEffect {
+            from { background-color: #e0ffe0; }
+            to { background-color: transparent; }
+        }
+        /* Để đảm bảo hiệu ứng chạy lại mỗi lần, có thể cần xóa và thêm lại class trong JS. */
+        /* Tuy nhiên, với ví dụ này, việc thêm class đã đủ để kích hoạt animation nếu phần tử chưa có class đó. */
+
+        #app { margin-top: 20px; border: 1px solid #ddd; padding: 10px; height: 400px; overflow-y: scroll; }
+        button { padding: 10px 15px; margin-bottom: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Pure DOM Manipulation Example (Update Last 10 of 10,000 Items)</h1>
+    <p>Watch the Console and Elements tab when you click the button.</p>
+    <button id="updateButton">Update Last 10 Items</button>
+    <div id="app"></div>
+
+    <script>
+        const appDiv = document.getElementById('app');
+        const updateButton = document.getElementById('updateButton');
+        const NUM_ITEMS = 10000; // Tổng số lượng mục để tạo
+        const NUM_TO_UPDATE = 10; // Số lượng mục cuối cùng cần cập nhật
+
+        console.log('Pure DOM Example: Script started.');
+
+        // Hàm để tạo danh sách ban đầu
+        function createInitialList() {
+            console.time('Pure DOM: Initial List Creation');
+            let html = '';
+            for (let i = 0; i < NUM_ITEMS; i++) {
+                html += `<div class="item" id="item-${i}">Item ${i + 1}</div>`;
+            }
+            appDiv.innerHTML = html;
+            console.timeEnd('Pure DOM: Initial List Creation');
+            console.log(`Pure DOM: Created ${NUM_ITEMS} items initially.`);
+        }
+
+        // Hàm để cập nhật 10 mục cuối cùng
+        function updateLast10Items() {
+            console.time('Pure DOM: Update Last 10 Items'); // Đổi tên log
+            console.log(`Pure DOM: Starting update for the last ${NUM_TO_UPDATE} items...`); // Đổi nội dung log
+
+            const startIndex = NUM_ITEMS - NUM_TO_UPDATE; // Tính toán chỉ số bắt đầu
+
+            for (let i = 0; i < NUM_TO_UPDATE; i++) { // Vòng lặp chỉ 10 lần
+                const itemIndex = startIndex + i; // Chỉ số thực của item trong danh sách
+                const itemElement = document.getElementById(`item-${itemIndex}`);
+
+                if (itemElement) {
+                    // Để đảm bảo animation chạy lại, ta có thể xóa và thêm lại class.
+                    // Nếu không có, animation sẽ chỉ chạy lần đầu class được thêm vào.
+                    itemElement.classList.remove('updated'); 
+                    // Yêu cầu trình duyệt reflow nhỏ để class có thể được thêm lại và kích hoạt animation
+                    // Không phải lúc nào cũng cần thiết nhưng hữu ích cho việc đảm bảo animation re-trigger
+                    void itemElement.offsetWidth; 
+
+                    itemElement.textContent = `UPDATED Last 10 Item ${itemIndex + 1} (${Date.now() % 10000})`; // Cập nhật text với timestamp
+                    itemElement.classList.add('updated'); // Thêm class để kích hoạt hiệu ứng
+                }
+            }
+            console.log('Pure DOM: Finished iterating through last 10 items. DOM updates applied.'); // Đổi nội dung log
+            console.timeEnd('Pure DOM: Update Last 10 Items'); // Đổi tên log
+        }
+
+        createInitialList(); // Tạo danh sách khi tải trang
+        updateButton.addEventListener('click', updateLast10Items); // Gán sự kiện click với hàm mới
+
+        console.log('Pure DOM Example: Script finished setup.');
+    </script>
+</body>
+</html>
